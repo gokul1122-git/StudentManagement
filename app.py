@@ -1,5 +1,4 @@
-
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from werkzeug.security import generate_password_hash
 from login import login_bp
 import sqlite3
@@ -142,6 +141,22 @@ def delete(id):
 
     return redirect(url_for("home"))
 
+# SEARCH - Search students by name
+@app.route("/search")
+def search_student():
+
+    name = request.args.get("name", "").strip()
+
+    with connect_db() as con:
+        con.row_factory = sqlite3.Row
+
+        students = con.execute(
+            "SELECT id, name, department "
+            "FROM students WHERE name LIKE ?",
+            ("%" + name + "%",)
+        ).fetchall()
+
+    return jsonify([dict(student) for student in students])
 
 if __name__ == "__main__":
     app.run(debug=True)
